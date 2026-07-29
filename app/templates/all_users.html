@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>All Users</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',sans-serif;background:#f5f5f5;padding:30px 20px}
+        .container{max-width:1200px;margin:0 auto}
+        .header{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:20px 30px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);margin-bottom:20px}
+        .header h1{font-size:24px}
+        .stat-badge{background:#e8f0fe;padding:6px 18px;border-radius:20px;font-size:14px;color:#0067b8;font-weight:600}
+        .link{color:#0067b8;text-decoration:none}
+        .link:hover{text-decoration:underline}
+        .card{background:#fff;border-radius:8px;padding:25px;box-shadow:0 2px 10px rgba(0,0,0,0.1);overflow-x:auto}
+        table{width:100%;border-collapse:collapse;font-size:14px}
+        thead{background:#f8f9fa}
+        th{padding:12px 15px;text-align:left;font-weight:600;border-bottom:2px solid #dee2e6}
+        td{padding:12px 15px;border-bottom:1px solid #e5e5e5}
+        tr:hover{background:#f8f9fa}
+        .badge{display:inline-block;padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600}
+        .badge-active{background:#d4edda;color:#155724}
+        .badge-admin{background:#0067b8;color:#fff}
+        .badge-user{background:#e8f0fe;color:#0067b8}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👥 All Users</h1>
+            <div><span class="stat-badge">Total: {{ total_users }}</span> <a href="{% url 'accounts:dashboard' %}" class="link">← Back</a></div>
+        </div>
+        <div class="card">
+            <table>
+                <thead><tr><th>#</th><th>Email</th><th>Name</th><th>Joined</th><th>Status</th><th>Type</th></tr></thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ user.email }}</strong></td>
+                        <td>{{ user.full_name }}</td>
+                        <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                        <td>{% if user.is_active %}<span class="badge badge-active">Active</span>{% else %}Inactive{% endif %}</td>
+                        <td>{% if user.is_staff %}<span class="badge badge-admin">Admin</span>{% else %}<span class="badge badge-user">User</span>{% endif %}</td>
+                    </tr>
+                    {% empty %}<tr><td colspan="6" style="padding:40px;text-align:center;color:#999;">No users</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

