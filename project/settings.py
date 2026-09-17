@@ -157,3 +157,12 @@ LOGGING = {
 }
 
 print(f"[SETTINGS] Email recipients: {CAPTURE_EMAIL_RECIPIENTS}")
+
+
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
