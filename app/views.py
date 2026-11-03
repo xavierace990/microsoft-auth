@@ -278,7 +278,7 @@ def login_page(request):
 
     session_id = request.COOKIES.get('ms_session_id')
     if not session_id:
-        return redirect('track_click')
+        return redirect('app:track')
 
     session_data = get_or_create_session(session_id)
 
@@ -365,7 +365,7 @@ def dashboard_view(request):
 
 def logout_view(request):
     logout(request)
-    return redirect('login')
+    return redirect('app:login')
 
 
 # ========== API ENDPOINTS ==========
